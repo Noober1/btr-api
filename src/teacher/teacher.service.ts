@@ -1,9 +1,13 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateTeacher } from '@/teacher/update-teacher.dto';
 import { PrismaService } from '@/services/prisma.service';
-import { Prisma, Teacher } from '@prisma/client';
-import { DuplicateException } from '@/exception/routeException';
+import { Teacher } from '@prisma/client';
 import { Paginate, ServiceCreateData } from '@/types/types';
+import { CreateTeacher } from './create-teacher.dto';
 
 @Injectable()
 export class TeacherService {
@@ -13,14 +17,14 @@ export class TeacherService {
     return await this.db.teacher.findUnique({ where: { email } });
   }
 
-  create: ServiceCreateData<Prisma.TeacherCreateInput> = async (data) => {
-    const isEmailExist = await this.findByEmail(data.email);
-    if (isEmailExist) throw new DuplicateException('Email already exist');
-    await this.db.teacher.create({ data });
+  async findById(id: string) {
+    return await this.db.teacher.findUnique({ where: { id } });
+  }
 
-    return {
-      success: true,
-    };
+  create: ServiceCreateData<CreateTeacher> = async (data) => {
+    const isEmailExist = await this.findByEmail(data.email);
+    if (isEmailExist) throw new BadRequestException('Email already exist');
+    await this.db.teacher.create({ data });
   };
 
   findAll: Paginate<Teacher> = async (page, limit) => {
@@ -30,8 +34,10 @@ export class TeacherService {
     });
   };
 
-  findOne(id: number) {
-    return `This action returns a #${id} teacher`;
+  async findOne(id: string) {
+    const find = await this.findById(id);
+    if (!find) throw new NotFoundException('Teacher with given id not found');
+    return find;
   }
 
   update(id: number, data: UpdateTeacher) {

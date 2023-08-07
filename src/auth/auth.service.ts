@@ -1,7 +1,7 @@
-import { NotFoundException } from '@/exception/routeException';
 import { UserService } from '@/user/user.service';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Session } from './auth.interface';
+import { Encryption } from '@/utils/encryption';
 
 @Injectable()
 export class AuthService {
@@ -10,12 +10,11 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<Session> {
     const user = await this.userService.findByUsername(username);
     if (!user)
-      throw new NotFoundException('User with given username not found');
+      throw new UnauthorizedException('User with given username not found');
 
-    // if password mismatch, return null
-    if (user.password !== password) {
-      return null;
-    }
+    const isPasswordMatch = await Encryption.isMatch(password, user.password);
+    // if password mismatch, throw unauthorize error
+    if (!isPasswordMatch) throw new UnauthorizedException('Password mismatch');
 
     return {
       id: user.id,

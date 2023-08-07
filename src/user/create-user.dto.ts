@@ -6,12 +6,15 @@ export class CreateUser implements Partial<User> {
   @IsNotEmpty()
   @ApiProperty()
   username: string;
+
   @IsNotEmpty()
   @ApiProperty()
   password: string;
+
   @IsEnum(Role)
-  @ApiProperty()
-  roles: Role;
+  @ApiProperty({ default: 'TEACHER' })
+  role: Role;
+
   @IsEmail()
   @ApiProperty()
   email: string;

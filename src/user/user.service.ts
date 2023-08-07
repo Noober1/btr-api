@@ -1,23 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { UpdateUser } from '@/user/update-user.dto';
-import { Prisma, User } from '@prisma/client';
-import { PrismaService } from '@/services/prisma.service';
 import {
-  DuplicateException,
+  BadRequestException,
+  Injectable,
   NotFoundException,
-} from '@/exception/routeException';
+} from '@nestjs/common';
+import { UpdateUser } from '@/user/update-user.dto';
+import { User } from '@prisma/client';
+import { PrismaService } from '@/services/prisma.service';
 import { TeacherService } from '@/teacher/teacher.service';
 import { StudentService } from '@/student/student.service';
 import { CreateUser } from '@/user/create-user.dto';
-import { Paginate } from '@/types/types';
+import { Paginate, ServiceCreateData } from '@/types/types';
+import { Encryption } from '@/utils/encryption';
 
 @Injectable()
 export class UserService {
   constructor(
-    private db: PrismaService,
-    private teacherService: TeacherService,
-    private studentService: StudentService,
+    private readonly db: PrismaService,
+    private readonly teacherService: TeacherService,
+    private readonly studentService: StudentService,
   ) {}
+
+  async findById(id: number): Promise<User> {
+    return await this.db.user.findUnique({ where: { id } });
+  }
 
   async findByUsername(username: string): Promise<User> {
     return await this.db.user.findUnique({ where: { username } });
@@ -31,34 +36,43 @@ export class UserService {
     });
   }
 
-  async create(data: CreateUser): Promise<object> {
+  async isUsernameUsedByOther(username: string, id: number): Promise<User> {
+    return await this.db.user.findFirst({
+      where: {
+        username,
+        NOT: {
+          id,
+        },
+      },
+    });
+  }
+
+  create: ServiceCreateData<CreateUser> = async (data) => {
     const isUsernameExist = await this.findByUsername(data.username);
-    if (isUsernameExist) throw new DuplicateException('Username already exist');
+    if (isUsernameExist)
+      throw new BadRequestException('Username already exist');
     const isUserWithThisEmailExist = await this.findByEmail(data.email);
     if (isUserWithThisEmailExist)
-      throw new DuplicateException('Email already exist');
+      throw new BadRequestException('Email already exist');
 
     const getBasicData =
-      data.roles === 'STUDENT'
+      data.role === 'STUDENT'
         ? await this.studentService.findByEmail(data.email)
         : await this.teacherService.findByEmail(data.email);
+    if (!getBasicData) throw new BadRequestException('Email not found');
 
-    if (!getBasicData) throw new NotFoundException('Email not found');
+    const hashedPassword = await Encryption.hash(data.password);
 
     await this.db.user.create({
       data: {
         username: data.username,
-        password: data.password,
-        roles: data.roles,
-        studentId: data.roles === 'STUDENT' ? getBasicData.id : undefined,
-        teacherId: data.roles === 'TEACHER' ? getBasicData.id : undefined,
+        password: hashedPassword,
+        role: data.role,
+        studentId: data.role === 'STUDENT' ? getBasicData.id : undefined,
+        teacherId: data.role === 'TEACHER' ? getBasicData.id : undefined,
       },
     });
-
-    return {
-      success: true,
-    };
-  }
+  };
 
   findAll: Paginate<User> = async (page, limit) => {
     return this.db
@@ -69,7 +83,7 @@ export class UserService {
         select: {
           id: true,
           username: true,
-          roles: true,
+          role: true,
           student: {
             select: {
               email: true,
@@ -87,20 +101,38 @@ export class UserService {
         result: result.map((value) => ({
           id: value.id,
           username: value.username,
-          roles: value.roles,
+          role: value.role,
           email:
-            value.roles === 'STUDENT'
+            value.role === 'STUDENT'
               ? value.student.email
               : value.teacher.email,
         })),
       }));
   };
 
-  update(id: number, data: UpdateUser) {
-    return `This action updates a #${id} user`;
+  async updateUser(id: number, data: UpdateUser) {
+    const getUser = await this.findById(id);
+    if (!getUser) throw new NotFoundException('User with given id not found');
+    if (data.username) {
+      const isUsernameUsedByOther = await this.isUsernameUsedByOther(
+        data.username,
+        id,
+      );
+      if (isUsernameUsedByOther)
+        throw new BadRequestException('Username already used by other user');
+    }
+
+    data.password = data.password
+      ? await Encryption.hash(data.password)
+      : undefined;
+
+    await this.db.user.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async deleteUser(id: number) {
+    await this.db.user.deleteMany({ where: { id } });
   }
 }

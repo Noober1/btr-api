@@ -1,8 +1,12 @@
-import { DuplicateException } from '@/exception/routeException';
 import { PrismaService } from '@/services/prisma.service';
 import { Paginate, ServiceCreateData } from '@/types/types';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Prisma, Student } from '@prisma/client';
+import { CreateStudent } from './create-student.dto';
 
 @Injectable()
 export class StudentService {
@@ -19,15 +23,22 @@ export class StudentService {
     });
   };
 
-  create: ServiceCreateData<Prisma.StudentCreateInput> = async (data) => {
+  create: ServiceCreateData<CreateStudent> = async (data) => {
     const isEmailExist = await this.findByEmail(data.email);
-    if (isEmailExist) throw new DuplicateException('Email already exist');
+    if (isEmailExist) throw new BadRequestException('Email already exist');
     await this.db.student.create({ data });
-
-    return {
-      success: true,
-    };
   };
+
+  async findOne(id: string) {
+    const getStudent = await this.db.student.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!getStudent) throw new NotFoundException('Student not found');
+    return getStudent;
+  }
 
   async delete(id: string) {
     await this.db.student.deleteMany({ where: { id } });

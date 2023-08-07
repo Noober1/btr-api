@@ -8,36 +8,73 @@ import {
   Delete,
   Req,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUser } from '@/user/create-user.dto';
 import { UpdateUser } from './update-user.dto';
-import { RequestWithPagination } from '@/middlewares/pagination.middleware';
+import {
+  PageDto,
+  PageSizeDto,
+  RequestWithPagination,
+} from '@/middlewares/pagination.middleware';
 import { AuthenticatedGuard } from '@/auth/authenticated.guard';
-import { ApiTags } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
 @Controller('user')
 @ApiTags('user')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @UseGuards(AuthenticatedGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  async create(@Body() data: CreateUser) {
-    this.userService.create(data);
-  }
-
   @Get()
+  @ApiOperation({ summary: 'Get all user' })
+  @ApiQuery({ name: 'page', type: PageDto })
+  @ApiQuery({ name: 'pageSize', type: PageSizeDto })
+  @ApiOkResponse({ description: 'Get all user' })
   findAll(@Req() req: RequestWithPagination) {
     return this.userService.findAll(req.page, req.pageSize);
   }
+
+  @Post()
+  @ApiOperation({
+    summary: 'Create a user',
+    description:
+      'Creating a user based on student or techer email. Make sure the email is exist from student or teacher database',
+  })
+  @ApiBadRequestResponse({ description: 'Bad request value' })
+  @ApiCreatedResponse({ description: 'Created successfully' })
+  async create(@Body() data: CreateUser) {
+    await this.userService.create(data);
+  }
+
   @Patch(':id')
-  update(@Param('id') id: string, @Body() data: UpdateUser) {
-    return this.userService.update(+id, data);
+  @ApiOperation({ summary: 'Update a user' })
+  @ApiNotFoundResponse({ description: 'Given user id not found' })
+  @ApiBadRequestResponse({
+    description: 'Invalid request input or unique data duplication',
+  })
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() data: UpdateUser,
+  ) {
+    await this.userService.updateUser(id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  @ApiOkResponse({ description: 'User deleted successfully' })
+  @ApiNotFoundResponse({ description: 'User with given id not found' })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.userService.deleteUser(id);
   }
 }

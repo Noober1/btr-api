@@ -3,10 +3,21 @@ import {
   Injectable,
   NestMiddleware,
 } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 import { Request, Response, NextFunction } from 'express';
 
 export interface RequestWithPagination extends Request {
   page: number;
+  pageSize: number;
+}
+
+export class PageDto {
+  @ApiProperty({ default: 1, required: false })
+  page: number;
+}
+
+export class PageSizeDto {
+  @ApiProperty({ default: 5, required: false })
   pageSize: number;
 }
 

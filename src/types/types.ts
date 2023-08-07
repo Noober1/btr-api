@@ -10,5 +10,5 @@ export interface Paginate<T = object> {
 }
 
 export interface ServiceCreateData<T = object> {
-  (data: T): Promise<object>;
+  (data: T): Promise<void>;
 }

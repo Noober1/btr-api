@@ -25,7 +25,7 @@ model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   password  String
-  roles     Role     @default(TEACHER)
+  role      Role     @default(TEACHER)
   teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
   teacherId String?  @unique
   student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)

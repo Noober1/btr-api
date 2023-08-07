@@ -1,9 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginAuth {
-  @ApiProperty()
+  @ApiProperty({ default: 'vulnerablev1' })
   username: string;
 
-  @ApiProperty()
+  @ApiProperty({ default: 'lordazzura123' })
   password: string;
 }

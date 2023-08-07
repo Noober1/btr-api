@@ -1,17 +1,15 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
-import { GetRootController } from './app.interface';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller()
+@ApiTags('main')
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
   @Get()
-  rootPath(): GetRootController {
-    return {
-      appName: 'BTR API',
-      version: '1.0.0',
-      author: 'Cucu Ruhiyatna',
-    };
+  @ApiOkResponse({ description: 'Description about this API' })
+  rootPath() {
+    return this.appService.getRoot();
   }
 }
