@@ -3,36 +3,156 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Teacher {
-  id       String @id @default(cuid())
-  fullname String
-  email    String @unique
-  user     User?
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  fullname  String
+  email     String    @unique
+  user      User?
 }
 
 model Student {
-  id       String @id @default(cuid())
-  fullname String
-  email    String @unique
-  user     User?
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime? @updatedAt
+  NIS        String?   @db.VarChar(10)
+  NISN       String?   @db.VarChar(10)
+  fullname   String
+  email      String    @unique
+  gender     Gender    @default(MALE)
+  birthPlace String
+  birthDate  DateTime
+  religion   Religion  @default(ISLAM)
+
+  user   User?
+  scores Score[]
+}
+
+model Major {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  name      String
+  code      String    @unique @db.VarChar(10)
+
+  academicSession AcademicSession[]
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
+  id        Int       @id @default(autoincrement())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  username  String    @unique
   password  String
-  role      Role     @default(TEACHER)
-  teacher   Teacher? @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  teacherId String?  @unique
-  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId String?  @unique
+  role      Role      @default(TEACHER)
+  teacher   Teacher?  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId String?   @unique
+  student   Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId String?   @unique
+}
+
+model Course {
+  id          String          @id @default(cuid())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime?       @updatedAt
+  name        String
+  description String?
+  type        CourseType      @default(NORMATIVE)
+  category    CourseCategory?
+}
+
+// kelompok pelajaran dibuat setiap 1 semester
+// terdapat beberapa indikator yang membedakan setiap kelompok belajar
+// 1. jurusan
+// 2. kumpulan siswa
+// 3. sesi akademik
+model AcademicSession {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+  year      Int
+  semester  Semester  @default(SEMESTER1)
+  major     Major     @relation(fields: [majorId], references: [id])
+  majorId   String
+
+  Scores Score[]
+}
+
+model Score {
+  id                String          @id @default(cuid())
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime?       @updatedAt
+  AcademicSession   AcademicSession @relation(fields: [academicSessionId], references: [id])
+  academicSessionId String
+  student           Student?        @relation(fields: [studentId], references: [id])
+  studentId         String?
+  score             Int
+  standardScore     Int             @default(75)
+  grade             ScoreGrade      @default(B)
+}
+
+enum Religion {
+  ISLAM
+  KRISTEN
+  KATHOLIK
+  HINDU
+  BUDHA
+  KONGHUCU
+}
+
+enum Semester {
+  SEMESTER1
+  SEMESTER2
+  SEMESTER3
+  SEMESTER4
+  SEMESTER5
+  SEMESTER6
+}
+
+enum ScoreGrade {
+  APLUS
+  A
+  AMINUS
+  BPLUS
+  B
+  BMINUS
+  CPLUS
+  C
+  CMINUS
+  DPLUS
+  D
+  DMINUS
+  EPLUS
+  E
+  EMINUS
+  FPLUS
+  F
+  FMINUS
+}
+
+enum CourseType {
+  NORMATIVE
+  ADAPTIVE
+  PRODUCTIVE
+}
+
+enum CourseCategory {
+  BASICAREAEXPERTICE
+  BASICSKILL
+  SKILLCOMPETENCY
 }
 
 enum Role {
   TEACHER
   STUDENT
+}
+
+enum Gender {
+  MALE
+  FEMALE
 }

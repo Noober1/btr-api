@@ -13,37 +13,37 @@ import {
 import { UserService } from './user.service';
 import { CreateUser } from '@/user/create-user.dto';
 import { UpdateUser } from './update-user.dto';
-import {
-  PageDto,
-  PageSizeDto,
-  RequestWithPagination,
-} from '@/middlewares/pagination.middleware';
+import { RequestWithPagination } from '@/middlewares/pagination.middleware';
 import { AuthenticatedGuard } from '@/auth/authenticated.guard';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { User } from '@prisma/client';
+import { ResponsePaginate } from '@/types/types';
+import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 
 @Controller('user')
 @ApiTags('user')
-@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiForbiddenResponse({ description: 'Client not logged in yet' })
 @UseGuards(AuthenticatedGuard)
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all user' })
-  @ApiQuery({ name: 'page', type: PageDto })
-  @ApiQuery({ name: 'pageSize', type: PageSizeDto })
-  @ApiOkResponse({ description: 'Get all user' })
-  findAll(@Req() req: RequestWithPagination) {
-    return this.userService.findAll(req.page, req.pageSize);
+  @ApiPagination({
+    summary: 'Get all user',
+    OkDescription: 'Returned all user',
+  })
+  findAll(
+    @Req() { page, pageSize }: RequestWithPagination,
+  ): ResponsePaginate<User> {
+    return this.userService.findAll(page, pageSize);
   }
 
   @Post()

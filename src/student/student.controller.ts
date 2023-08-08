@@ -4,45 +4,43 @@ import {
   Delete,
   Get,
   Param,
-  Patch,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { StudentService } from './student.service';
-import {
-  PageDto,
-  PageSizeDto,
-  RequestWithPagination,
-} from '@/middlewares/pagination.middleware';
+import { RequestWithPagination } from '@/middlewares/pagination.middleware';
 import { CreateStudent } from '@/student/create-student.dto';
 import { AuthenticatedGuard } from '@/auth/authenticated.guard';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { UpdateStudent } from './update-student.dto';
+import { ResponsePaginate } from '@/types/types';
+import { Student } from '@prisma/client';
+import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 
 @Controller('student')
 @ApiTags('student')
-@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiForbiddenResponse({ description: 'Client not logged in yet' })
 @UseGuards(AuthenticatedGuard)
 export class StudentController {
   constructor(private readonly studentService: StudentService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all student' })
-  @ApiQuery({ name: 'page', type: PageDto })
-  @ApiQuery({ name: 'pageSize', type: PageSizeDto })
-  @ApiOkResponse({ description: 'Get all student' })
-  findAllStudent(@Req() req: RequestWithPagination) {
-    return this.studentService.findAll(req.page, req.pageSize);
+  @ApiPagination({
+    summary: 'Get all student',
+    OkDescription: 'Returned all student',
+  })
+  findAllStudent(
+    @Req() { page, pageSize }: RequestWithPagination,
+  ): ResponsePaginate<Student> {
+    return this.studentService.findAll(page, pageSize);
   }
 
   @Post()

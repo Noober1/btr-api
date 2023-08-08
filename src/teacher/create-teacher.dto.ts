@@ -3,11 +3,11 @@ import { Teacher } from '@prisma/client';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class CreateTeacher implements Partial<Teacher> {
-  @IsNotEmpty()
   @ApiProperty()
+  @IsNotEmpty()
   fullname: string;
 
-  @IsEmail()
   @ApiProperty()
+  @IsEmail()
   email: string;
 }

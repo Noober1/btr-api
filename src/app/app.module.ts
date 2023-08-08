@@ -12,9 +12,10 @@ import { PaginationMiddleware } from '@/middlewares/pagination.middleware';
 import { ConfigMiddleware } from '@/middlewares/config.middleware';
 import { AuthModule } from '@/auth/auth.module';
 import { StudentModule } from '@/student/student.module';
+import { MajorModule } from '@/major/major.module';
 
 @Module({
-  imports: [AuthModule, UserModule, TeacherModule, StudentModule],
+  imports: [AuthModule, UserModule, TeacherModule, StudentModule, MajorModule],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -5,7 +5,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, Student } from '@prisma/client';
+import { Student } from '@prisma/client';
 import { CreateStudent } from './create-student.dto';
 
 @Injectable()

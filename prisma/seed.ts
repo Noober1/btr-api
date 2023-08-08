@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
@@ -13,11 +14,19 @@ async function main() {
   console.log('Seeding teacher OK');
 
   await prisma.student.createMany({
-    data: [{ email: 'student@mail.com', fullname: 'Student name' }],
+    data: [
+      {
+        email: 'student@mail.com',
+        fullname: 'Student name',
+        birthDate: new Date('04/06/1998'),
+        birthPlace: 'Subang',
+      },
+    ],
     skipDuplicates: true,
   });
   console.log('Seeding student OK');
 
+  const hashedPassword = await bcrypt.hash('lordazzura123', 10);
   const getTeacher = await prisma.teacher.findUnique({
     where: { email: 'example@mail.com' },
   });
@@ -26,10 +35,12 @@ async function main() {
       where: {
         teacherId: getTeacher.id,
       },
-      update: {},
+      update: {
+        password: hashedPassword,
+      },
       create: {
         username: 'vulnerablev1',
-        password: 'lordazzura123',
+        password: hashedPassword,
         role: 'TEACHER',
         teacherId: getTeacher.id,
       },

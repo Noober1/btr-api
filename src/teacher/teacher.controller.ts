@@ -10,37 +10,37 @@ import {
 } from '@nestjs/common';
 import { TeacherService } from '@/teacher/teacher.service';
 import { CreateTeacher } from '@/teacher/create-teacher.dto';
-import {
-  PageDto,
-  PageSizeDto,
-  RequestWithPagination,
-} from '@/middlewares/pagination.middleware';
+import { RequestWithPagination } from '@/middlewares/pagination.middleware';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
-  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { AuthenticatedGuard } from '@/auth/authenticated.guard';
+import { ResponsePaginate } from '@/types/types';
+import { Teacher } from '@prisma/client';
+import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 
 @Controller('teacher')
 @ApiTags('teacher')
-@ApiUnauthorizedResponse({ description: 'Unauthorized' })
+@ApiForbiddenResponse({ description: 'Client not logged in yet' })
 @UseGuards(AuthenticatedGuard)
 export class TeacherController {
   constructor(private readonly teacherService: TeacherService) {}
 
   @Get()
-  @ApiOperation({ summary: 'Get all user' })
-  @ApiQuery({ name: 'page', type: PageDto })
-  @ApiQuery({ name: 'pageSize', type: PageSizeDto })
-  @ApiOkResponse({ description: 'Return all teacher' })
-  findAll(@Req() req: RequestWithPagination) {
-    return this.teacherService.findAll(req.page, req.pageSize);
+  @ApiPagination({
+    summary: 'Get all user',
+    OkDescription: 'Returned all teacher',
+  })
+  findAll(
+    @Req() { page, pageSize }: RequestWithPagination,
+  ): ResponsePaginate<Teacher> {
+    return this.teacherService.findAll(page, pageSize);
   }
 
   @Get(':id')

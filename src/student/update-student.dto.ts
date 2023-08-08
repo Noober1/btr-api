@@ -1,13 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Student } from '@prisma/client';
-import { IsNotEmpty, IsEmail } from 'class-validator';
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateStudent } from './create-student.dto';
 
-export class UpdateStudent implements Partial<Student> {
-  @IsNotEmpty()
-  @ApiProperty()
-  fullname: string;
-
-  @IsEmail()
-  @ApiProperty()
-  email: string;
-}
+export class UpdateStudent extends PartialType(CreateStudent) {}
