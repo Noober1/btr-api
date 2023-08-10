@@ -1,14 +1,32 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { UserModule } from '@/user/user.module';
-import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from '@/auth/local.strategy';
 import { AuthController } from './auth.controller';
-import { SessionSerializer } from './session.serializer';
+import { AuthService } from './auth.service';
+import { PrismaService } from '@/services/prisma.service';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './auth.guards';
+import { RolesGuard } from '@/user/roles.guard';
 
 @Module({
-  imports: [UserModule, PassportModule.register({ session: true })],
-  providers: [AuthService, LocalStrategy, SessionSerializer],
+  imports: [
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET || 'k4cung',
+      signOptions: { expiresIn: '1d' },
+    }),
+  ],
   controllers: [AuthController],
+  providers: [
+    AuthService,
+    PrismaService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+  ],
 })
 export class AuthModule {}

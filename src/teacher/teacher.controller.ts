@@ -7,12 +7,14 @@ import {
   Delete,
   Req,
   UseGuards,
+  Patch,
 } from '@nestjs/common';
 import { TeacherService } from '@/teacher/teacher.service';
 import { CreateTeacher } from '@/teacher/create-teacher.dto';
 import { RequestWithPagination } from '@/middlewares/pagination.middleware';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -20,22 +22,23 @@ import {
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
-import { AuthenticatedGuard } from '@/auth/authenticated.guard';
+// import { AuthenticatedGuard } from '@/auth/authenticated.guard';
 import { ResponsePaginate } from '@/types/types';
 import { Teacher } from '@prisma/client';
 import { ApiPagination } from '@/middlewares/paginationApi.decorator';
+import { UpdateTeacher } from './update-teacher.dto';
 
 @Controller('teacher')
-@ApiTags('teacher')
-@ApiForbiddenResponse({ description: 'Client not logged in yet' })
-@UseGuards(AuthenticatedGuard)
+@ApiTags('Guru')
+@ApiForbiddenResponse({ description: 'Client belum login' })
+@ApiBearerAuth()
 export class TeacherController {
   constructor(private readonly teacherService: TeacherService) {}
 
   @Get()
   @ApiPagination({
-    summary: 'Get all user',
-    OkDescription: 'Returned all teacher',
+    summary: 'Mendapatkan semua guru',
+    OkDescription: 'Mengembalikan semua guru',
   })
   findAll(
     @Req() { page, pageSize }: RequestWithPagination,
@@ -44,27 +47,44 @@ export class TeacherController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a teacher by id' })
-  @ApiOkResponse({ description: 'Return a teacher' })
-  @ApiNotFoundResponse({ description: 'Given teacher id not found' })
+  @ApiOperation({ summary: 'Pendapatkan guru berdasarkan ID' })
+  @ApiOkResponse({ description: 'Menampilkan guru' })
+  @ApiNotFoundResponse({
+    description: 'Guru dengan ID yang diberikan tidak ditemukan',
+  })
   findOne(@Param('id') id: string) {
     return this.teacherService.findOne(id);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Create a teacher' })
-  @ApiCreatedResponse({ description: 'Teacher created successfully' })
+  @Patch(':id')
+  @ApiOperation({ summary: 'Memperbarui guru' })
+  @ApiOkResponse({ description: 'Guru berhasil diperbarui' })
+  @ApiNotFoundResponse({
+    description: 'Guru dengan ID yang diberikan tidak ditemukan',
+  })
   @ApiBadRequestResponse({
-    description: 'Bad request value or unique data already exist',
+    description: 'Data yang diberikan invalid atau terjadi duplikasi data',
+  })
+  async updateStudent(@Param('id') id: string, @Body() data: UpdateTeacher) {
+    await this.teacherService.updateTeacher(id, data);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Membuat guru' })
+  @ApiCreatedResponse({ description: 'Guru berhasil dibuat' })
+  @ApiBadRequestResponse({
+    description: 'Data yang diberikan invalid atau terjadi duplikasi data',
   })
   async create(@Body() data: CreateTeacher) {
     await this.teacherService.create(data);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a teacher by id' })
-  @ApiOkResponse({ description: 'Teacher deleted successfully' })
-  @ApiNotFoundResponse({ description: 'Teacher with given id not found' })
+  @ApiOperation({ summary: 'Menghapus guru berdasarkan ID' })
+  @ApiOkResponse({ description: 'Guru berhasil dihapus' })
+  @ApiNotFoundResponse({
+    description: 'Guru dengan ID yang diberikan tidak ditemukan',
+  })
   delete(@Param('id') id: string) {
     return this.teacherService.deleteTeacher(id);
   }

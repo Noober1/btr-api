@@ -12,12 +12,20 @@ export interface RequestWithPagination extends Request {
 }
 
 export class PageDto {
-  @ApiProperty({ default: 1, required: false })
+  @ApiProperty({
+    default: 1,
+    required: false,
+    description: 'Halaman yang ditampilkan',
+  })
   page: number;
 }
 
 export class PageSizeDto {
-  @ApiProperty({ default: 5, required: false })
+  @ApiProperty({
+    default: 5,
+    required: false,
+    description: 'Jumlah data yang ditampilkan per halaman',
+  })
   pageSize: number;
 }
 

@@ -8,6 +8,12 @@ import * as passport from 'passport';
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;
   const app = await NestFactory.create(AppModule);
+
+  app.enableCors({
+    origin: 'http://localhost:3000',
+    credentials: true,
+  });
+
   // global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({
@@ -28,12 +34,20 @@ async function bootstrap() {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  // swagger
   const config = new DocumentBuilder()
     .setTitle('BTR API')
     .setDescription('SMK Bina Taruna Jalancagak API')
     .setVersion('1.0')
+    .addBearerAuth({
+      bearerFormat: 'JWT',
+      scheme: 'bearer',
+      type: 'http',
+      name: 'Authentication',
+      description:
+        'Untuk mendapatkan akses token. Silahkan untuk login terlebih dahulu pada API POST /auth/login',
+    })
     .build();
-
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 

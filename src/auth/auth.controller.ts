@@ -1,45 +1,34 @@
 import {
+  Body,
   Controller,
-  Request,
+  Get,
   Post,
   UseGuards,
-  Get,
-  Body,
-  HttpCode,
-  HttpStatus,
+  Request,
 } from '@nestjs/common';
-import { LocalAuthGuard } from './local-auth.guard';
-import {
-  ApiOkResponse,
-  ApiOperation,
-  ApiTags,
-  ApiUnauthorizedResponse,
-} from '@nestjs/swagger';
-import { LoginAuth } from './auth.dto';
+import { AuthService } from './auth.service';
+import { AuthDto } from './auth.dto';
+import { Public } from '@/auth/auth.decorator';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { RequestWithUser, Session } from './auth.interfaces';
 
-@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
   @Post('login')
-  @ApiOperation({ summary: 'Login authentication' })
-  @ApiUnauthorizedResponse({
-    description: "Given credential doesn't match",
-  })
-  @ApiOkResponse({ description: 'Login successfully' })
-  @UseGuards(LocalAuthGuard)
-  @HttpCode(HttpStatus.OK)
-  async authLogin(@Request() req, @Body() data: LoginAuth): Promise<object> {
-    return {
-      success: true,
-      data: req.user,
-    };
+  @Public()
+  async login(@Body() data: AuthDto) {
+    return this.authService.signIn(data.username, data.password);
   }
 
-  @Get('logout')
-  @ApiOperation({ summary: 'Logout authentication' })
-  @ApiOkResponse({ description: 'Logout successfully' })
-  authLogout(@Request() req): object {
-    req.session.destroy();
-    return { success: true };
+  @Get('profile')
+  @ApiOperation({ summary: 'Profile user' })
+  @ApiOkResponse({
+    description: 'Mengembalikan data profile user yang sudah login',
+  })
+  @ApiBearerAuth()
+  authProfile(@Request() req: RequestWithUser): Session {
+    return req.user;
   }
 }

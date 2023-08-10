@@ -13,17 +13,38 @@ import { CreateTeacher } from './create-teacher.dto';
 export class TeacherService {
   constructor(private readonly db: PrismaService) {}
 
-  async findByEmail(email: string) {
-    return await this.db.teacher.findUnique({ where: { email } });
+  findByEmail(email: string) {
+    return this.db.teacher.findUnique({ where: { email } });
   }
 
-  async findById(id: string) {
-    return await this.db.teacher.findUnique({ where: { id } });
+  findById(id: string) {
+    return this.db.teacher.findUnique({ where: { id } });
+  }
+
+  findStudentEmail(email: string) {
+    return this.db.student.findUnique({ where: { email } });
+  }
+
+  isEmailUsedByOther(email: string, id: string) {
+    return this.db.teacher.count({
+      where: {
+        email,
+        NOT: {
+          id,
+        },
+      },
+    });
+  }
+
+  isEmailByStudent(email: string) {
+    return this.db.student.count({ where: { email } });
   }
 
   create: ServiceCreateData<CreateTeacher> = async (data) => {
     const isEmailExist = await this.findByEmail(data.email);
-    if (isEmailExist) throw new BadRequestException('Email already exist');
+    const isEmailStudent = await this.findStudentEmail(data.email);
+    if (isEmailExist || isEmailStudent)
+      throw new BadRequestException('Email already exist');
     await this.db.teacher.create({ data });
   };
 
@@ -40,11 +61,29 @@ export class TeacherService {
     return find;
   }
 
-  update(id: number, data: UpdateTeacher) {
-    return `This action updates a #${id} teacher`;
+  // TODO: ini belum beres gan
+  async updateTeacher(id: string, data: UpdateTeacher) {
+    const getTeacher = await this.findById(id);
+    if (!getTeacher)
+      throw new NotFoundException('Teacher with given id not found');
+    if (data.email) {
+      const isEmailUsed = await this.isEmailUsedByOther(data.email, id);
+      const isEmailFromStudent = await this.isEmailByStudent(data.email);
+      // if email used by other student or by teacher, return error
+      if (isEmailUsed || isEmailFromStudent)
+        throw new BadRequestException('Email already used by other');
+    }
+
+    await this.db.student.update({
+      where: { id },
+      data,
+    });
   }
 
   async deleteTeacher(id: string) {
-    await this.db.teacher.deleteMany({ where: { id } });
+    const getTeacher = await this.findById(id);
+    if (!getTeacher)
+      throw new NotFoundException('Teacher with given id not found');
+    await this.db.teacher.delete({ where: { id } });
   }
 }

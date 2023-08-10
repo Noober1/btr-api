@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   Req,
+  UseGuards,
 } from '@nestjs/common';
 import { MajorService } from '@/major/major.service';
-import { CreateMajorDto } from '@/major/create-major.dto';
-import { UpdateMajorDto } from '@/major/update-major.dto';
+import { CreateMajor } from '@/major/create-major.dto';
+import { UpdateMajor } from '@/major/update-major.dto';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiCreatedResponse,
   ApiForbiddenResponse,
   ApiNotFoundResponse,
@@ -24,17 +26,19 @@ import { RequestWithPagination } from '@/middlewares/pagination.middleware';
 import { ResponsePaginate } from '@/types/types';
 import { Major } from '@prisma/client';
 import { ApiPagination } from '@/middlewares/paginationApi.decorator';
+// import { AuthenticatedGuard } from '@/auth/authenticated.guard';
 
 @Controller('major')
-@ApiTags('major')
-@ApiForbiddenResponse({ description: 'Client not logged in yet' })
+@ApiTags('Jurusan')
+@ApiForbiddenResponse({ description: 'Client belum login' })
+@ApiBearerAuth()
 export class MajorController {
   constructor(private readonly majorService: MajorService) {}
 
   @Get()
   @ApiPagination({
-    summary: 'Get all major',
-    OkDescription: 'Returned all major',
+    summary: 'Mendapatkan semua jurusan',
+    OkDescription: 'Menampilkan semua jurusan',
   })
   findAll(
     @Req() { page, pageSize }: RequestWithPagination,
@@ -43,34 +47,44 @@ export class MajorController {
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a major' })
+  @ApiOperation({ summary: 'Membuat jurusan' })
   @ApiBadRequestResponse({
-    description: 'Bad request value or duplication data',
+    description: 'Data yang diberikan invalid atau terjadi duplikasi data',
   })
-  @ApiCreatedResponse({ description: 'Major created successfully' })
-  async create(@Body() data: CreateMajorDto) {
+  @ApiCreatedResponse({ description: 'Jurusan berhasil dibuat' })
+  async create(@Body() data: CreateMajor) {
     await this.majorService.create(data);
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Mendapatkan jurusan berdasarkan ID' })
+  @ApiOkResponse({ description: 'Menampilkan jurusan' })
+  @ApiNotFoundResponse({
+    description: 'Jurusan dengan ID yang diberikan tidak ditemukan',
+  })
   findOne(@Param('id') id: string) {
-    return this.majorService.findOne(+id);
+    return this.majorService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Update a major by id' })
-  @ApiOkResponse({ description: 'Major updated successfully' })
+  @ApiOperation({ summary: 'Memperbarui jurusan berdasarkan ID' })
+  @ApiOkResponse({ description: 'Jurusan berhasil diperbarui' })
   @ApiBadRequestResponse({
-    description: 'Invalid request value or duplicate data',
+    description: 'Data yang diberikan invalid atau terjadi duplikasi data',
   })
-  async update(@Param('id') id: string, @Body() data: UpdateMajorDto) {
+  @ApiNotFoundResponse({
+    description: 'Jurusan dengan ID yang diberikan tidak ditemukan',
+  })
+  async update(@Param('id') id: string, @Body() data: UpdateMajor) {
     await this.majorService.update(id, data);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a major' })
-  @ApiOkResponse({ description: 'Major deleted successfully' })
-  @ApiNotFoundResponse({ description: 'Major with given id not found' })
+  @ApiOperation({ summary: 'Menghapus jurusan' })
+  @ApiOkResponse({ description: 'Jurusan berhasil dihapus' })
+  @ApiNotFoundResponse({
+    description: 'Jurusan dengan ID yang diberikan tidak ditemukan',
+  })
   remove(@Param('id') id: string) {
     return this.majorService.remove(id);
   }

@@ -13,9 +13,17 @@ import { ConfigMiddleware } from '@/middlewares/config.middleware';
 import { AuthModule } from '@/auth/auth.module';
 import { StudentModule } from '@/student/student.module';
 import { MajorModule } from '@/major/major.module';
+import { CourseModule } from '@/course/course.module';
 
 @Module({
-  imports: [AuthModule, UserModule, TeacherModule, StudentModule, MajorModule],
+  imports: [
+    AuthModule,
+    UserModule,
+    TeacherModule,
+    StudentModule,
+    MajorModule,
+    CourseModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

@@ -7,7 +7,7 @@ import { StudentService } from '@/student/student.service';
 
 @Module({
   controllers: [UserController],
-  providers: [UserService, PrismaService, TeacherService, StudentService],
+  providers: [UserService, TeacherService, StudentService, PrismaService],
   exports: [UserService],
 })
 export class UserModule {}

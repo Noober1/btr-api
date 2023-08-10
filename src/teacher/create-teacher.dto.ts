@@ -8,6 +8,7 @@ export class CreateTeacher implements Partial<Teacher> {
   fullname: string;
 
   @ApiProperty()
+  @IsNotEmpty()
   @IsEmail()
   email: string;
 }

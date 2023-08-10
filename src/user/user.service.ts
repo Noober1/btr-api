@@ -110,6 +110,44 @@ export class UserService {
       }));
   };
 
+  async findOne(id: number) {
+    const getUser = await this.db.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        username: true,
+        createdAt: true,
+        updatedAt: true,
+        role: true,
+        student: {
+          select: {
+            fullname: true,
+            birthDate: true,
+            birthPlace: true,
+            email: true,
+            NIS: true,
+            NISN: true,
+          },
+        },
+        teacher: {
+          select: {
+            fullname: true,
+            email: true,
+          },
+        },
+      },
+    });
+    if (!getUser) throw new NotFoundException('User with given ID not found');
+    const userData =
+      getUser.student !== null ? getUser.student : getUser.teacher;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { student, teacher, ...data } = getUser;
+    return {
+      ...data,
+      data: userData,
+    };
+  }
+
   async updateUser(id: number, data: UpdateUser) {
     const getUser = await this.findById(id);
     if (!getUser) throw new NotFoundException('User with given id not found');
@@ -133,6 +171,8 @@ export class UserService {
   }
 
   async deleteUser(id: number) {
-    await this.db.user.deleteMany({ where: { id } });
+    const getUser = this.findById(id);
+    if (!getUser) throw new NotFoundException('User with given id not found');
+    await this.db.user.delete({ where: { id } });
   }
 }

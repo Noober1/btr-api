@@ -3,9 +3,10 @@ import {
   HttpException,
   HttpStatus,
   Injectable,
+  NotFoundException,
 } from '@nestjs/common';
-import { CreateMajorDto } from '@/major/create-major.dto';
-import { UpdateMajorDto } from '@/major/update-major.dto';
+import { CreateMajor } from '@/major/create-major.dto';
+import { UpdateMajor } from '@/major/update-major.dto';
 import { Paginate, ServiceCreateData } from '@/types/types';
 import { Major, Prisma } from '@prisma/client';
 import { PrismaService } from '@/services/prisma.service';
@@ -27,9 +28,11 @@ export class MajorService {
     });
   }
 
-  findByCode = (code: string) => this.db.major.findUnique({ where: { code } });
+  findByCode(code: string) {
+    return this.db.major.findUnique({ where: { code } });
+  }
 
-  create: ServiceCreateData<CreateMajorDto> = async (data) => {
+  create: ServiceCreateData<CreateMajor> = async (data) => {
     const isCodeExist = await this.findByCode(data.code);
     if (isCodeExist)
       throw new BadRequestException('Major with given code already exist');
@@ -41,11 +44,15 @@ export class MajorService {
     return this.db.extended().major.paginate({ page, limit });
   };
 
-  findOne(id: number) {
-    return `This action returns a #${id} major`;
+  async findOne(id: string) {
+    const getData = await this.db.major.findUnique({
+      where: { id },
+    });
+    if (!getData) throw new NotFoundException('Major with given id not found');
+    return getData;
   }
 
-  async update(id: string, data: UpdateMajorDto) {
+  async update(id: string, data: UpdateMajor) {
     // count where code equal given code AND id not equal given id
     const getOtherMajorByCode = await this.isCodeUsedByOther(data.code, id);
 
