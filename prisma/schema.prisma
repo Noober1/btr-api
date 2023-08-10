@@ -44,16 +44,17 @@ model Major {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime? @updatedAt
-  username  String    @unique
-  password  String
-  role      Role      @default(TEACHER)
-  teacher   Teacher?  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  teacherId String?   @unique
-  student   Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  studentId String?   @unique
+  id           Int       @id @default(autoincrement())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime? @updatedAt
+  username     String    @unique
+  password     String
+  role         Role      @default(TEACHER)
+  teacher      Teacher?  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  teacherId    String?   @unique
+  student      Student?  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  studentId    String?   @unique
+  refreshToken String?
 }
 
 // ini untuk nama2 mapel

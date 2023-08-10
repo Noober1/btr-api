@@ -27,6 +27,7 @@ import { ResponsePaginate } from '@/types/types';
 import { Teacher } from '@prisma/client';
 import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 import { UpdateTeacher } from './update-teacher.dto';
+import { AccessTokenGuard } from '@/auth/access-token.guard';
 
 @Controller('teacher')
 @ApiTags('Guru')

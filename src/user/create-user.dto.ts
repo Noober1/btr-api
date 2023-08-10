@@ -18,4 +18,6 @@ export class CreateUser implements Partial<User> {
   @IsEmail()
   @ApiProperty()
   email: string;
+
+  refreshToken: string;
 }

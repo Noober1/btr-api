@@ -29,6 +29,7 @@ import { ResponsePaginate } from '@/types/types';
 import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 import { Roles } from '@/auth/auth.decorator';
 import { RolesGuard } from './roles.guard';
+import { AccessTokenGuard } from '@/auth/access-token.guard';
 
 @Controller('user')
 @ApiTags('User')
@@ -38,11 +39,11 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
+  @UseGuards(AccessTokenGuard)
   @ApiPagination({
     summary: 'Mendapatkan semua user',
     OkDescription: 'Menampilkan semua user',
   })
-  @Roles('TEACHER')
   findAll(
     @Req() { page, pageSize }: RequestWithPagination,
   ): ResponsePaginate<User> {

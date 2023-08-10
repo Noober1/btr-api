@@ -1,31 +1,30 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { PrismaService } from '@/services/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './auth.guards';
-import { RolesGuard } from '@/user/roles.guard';
+import { AccessTokenStrategy } from './access-token.strategy';
+import { RefreshTokenStrategy } from './refresh-token.strategy';
+import { UserModule } from '@/user/user.module';
+import { ConfigService } from '@nestjs/config';
+import { AccessTokenGuard } from './access-token.guard';
 
 @Module({
   imports: [
     JwtModule.register({
       global: true,
-      secret: process.env.JWT_SECRET || 'k4cung',
-      signOptions: { expiresIn: '1d' },
     }),
+    UserModule,
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
-    PrismaService,
+    AccessTokenStrategy,
+    RefreshTokenStrategy,
+    ConfigService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
-    },
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
+      useClass: AccessTokenGuard,
     },
   ],
 })
