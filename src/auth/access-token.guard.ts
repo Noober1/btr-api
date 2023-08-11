@@ -6,7 +6,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { AuthGuard } from '@nestjs/passport';
-import { IS_PUBLIC_KEY } from './auth.decorator';
+import { NO_ACCESS_TOKEN } from './auth.decorator';
 import { Request } from 'express';
 
 @Injectable()
@@ -16,12 +16,12 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
+    const allowNoAccessToken = this.reflector.getAllAndOverride<boolean>(
+      NO_ACCESS_TOKEN,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (isPublic) {
+    if (allowNoAccessToken) {
       return true;
     }
 

@@ -1,11 +1,11 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
-// import { Public } from '@/auth/auth.decorator';
+import { AllowNoToken } from '@/auth/auth.decorator';
 
 @Controller()
 @ApiTags('utama')
-// @Public()
+@AllowNoToken()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

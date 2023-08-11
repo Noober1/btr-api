@@ -4,17 +4,20 @@ import {
   Get,
   Post,
   UseGuards,
-  Request,
   Req,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthDto } from './auth.dto';
-import { Public } from '@/auth/auth.decorator';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation } from '@nestjs/swagger';
-import { RequestWithUser, Session } from './auth.interfaces';
-import { AccessTokenGuard } from './access-token.guard';
+import { AllowNoToken } from '@/auth/auth.decorator';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+} from '@nestjs/swagger';
+import { RequestWithUser } from './auth.interfaces';
 import { RefreshTokenGuard } from './refresh-token.guard';
 
 @Controller('auth')
@@ -22,20 +25,32 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  @Public()
+  @AllowNoToken()
+  @ApiOperation({
+    summary: 'Login user',
+    description:
+      'Login untuk mendapatkan token, yaitu access token dan refresh token. Access token digunakan untuk mengakses fitur-fitur pada API ini. Sedangkan Refresh token digunakan untuk memperbarui access token yang sudah kadaluarsa.',
+  })
+  @ApiOkResponse({
+    description: 'Mengembalikan access token dan refresh token',
+  })
+  @ApiBadRequestResponse({ description: 'Autentikasi invalid' })
   @HttpCode(HttpStatus.OK)
   async login(@Body() data: AuthDto) {
     return this.authService.signIn(data.username, data.password);
   }
 
-  @ApiBearerAuth()
   @Get('logout')
+  @ApiBearerAuth()
+  @AllowNoToken()
+  @UseGuards(RefreshTokenGuard)
   logout(@Req() req: RequestWithUser) {
+    console.log('hehe,', req.user);
     this.authService.logout(req.user['sub']);
   }
 
   @Get('refresh')
-  @Public()
+  @AllowNoToken()
   @UseGuards(RefreshTokenGuard)
   @ApiBearerAuth()
   refreshTokens(@Req() req: RequestWithUser) {
