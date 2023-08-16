@@ -33,9 +33,10 @@ export class AccessTokenGuard extends AuthGuard('jwt') {
     }
 
     try {
-      await this.jwtService.verifyAsync(token, {
+      const verifyToken = await this.jwtService.verifyAsync(token, {
         secret: process.env.JWT_ACCESS_SECRET,
       });
+      request['user'] = verifyToken;
     } catch {
       throw new UnauthorizedException('Token invalid');
     }

@@ -43,14 +43,22 @@ export class AuthController {
   @Get('logout')
   @ApiBearerAuth()
   @AllowNoToken()
+  @ApiOperation({
+    summary: 'Logout user',
+    description: 'Setelah logout, akses token dari database akan dihapus',
+  })
   @UseGuards(RefreshTokenGuard)
   logout(@Req() req: RequestWithUser) {
-    console.log('hehe,', req.user);
     this.authService.logout(req.user['sub']);
   }
 
   @Get('refresh')
   @AllowNoToken()
+  @ApiOperation({
+    summary: 'Untuk merefresh akses token',
+    description:
+      'Akses token memiliki masa kadaluarsa. Gunakan endpoint ini untuk membuat akses token baru.',
+  })
   @UseGuards(RefreshTokenGuard)
   @ApiBearerAuth()
   refreshTokens(@Req() req: RequestWithUser) {

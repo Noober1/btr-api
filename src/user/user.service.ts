@@ -50,16 +50,19 @@ export class UserService {
   create: ServiceCreateData<CreateUser> = async (data) => {
     const isUsernameExist = await this.findByUsername(data.username);
     if (isUsernameExist)
-      throw new BadRequestException('Username already exist');
+      throw new BadRequestException(
+        'Nama pengguna telah digunakan oleh pengguna lain',
+      );
     const isUserWithThisEmailExist = await this.findByEmail(data.email);
     if (isUserWithThisEmailExist)
-      throw new BadRequestException('Email already exist');
+      throw new BadRequestException('Email telah digunakan oleh pengguna lain');
 
     const getBasicData =
       data.role === 'STUDENT'
         ? await this.studentService.findByEmail(data.email)
         : await this.teacherService.findByEmail(data.email);
-    if (!getBasicData) throw new BadRequestException('Email not found');
+
+    if (!getBasicData) throw new BadRequestException('Email tidak ditemukan');
 
     const hashedPassword = await Encryption.hash(data.password);
 
@@ -170,9 +173,13 @@ export class UserService {
     });
   }
 
-  async deleteUser(id: number) {
-    const getUser = this.findById(id);
-    if (!getUser) throw new NotFoundException('User with given id not found');
-    await this.db.user.delete({ where: { id } });
+  async deleteUser(ids: number[]) {
+    await this.db.user.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
   }
 }

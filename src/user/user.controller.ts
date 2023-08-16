@@ -30,6 +30,8 @@ import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 import { Roles } from '@/auth/auth.decorator';
 import { RolesGuard } from './roles.guard';
 import { AccessTokenGuard } from '@/auth/access-token.guard';
+import { IdListDto } from '@/id-list.dto';
+import { RequestWithUser } from '@/auth/auth.interfaces';
 
 @Controller('user')
 @ApiTags('User')
@@ -87,13 +89,19 @@ export class UserController {
     await this.userService.updateUser(id, data);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Menghapus user berdasarkan id' })
+  @Delete()
+  @ApiOperation({ summary: 'Menghapus user berdasarkan kumpulan id' })
   @ApiOkResponse({ description: 'Pengguna berhasil dihapus' })
   @ApiNotFoundResponse({
     description: 'Data dengan ID user yang diberikan tidak ditemukan',
   })
-  async remove(@Param('id', ParseIntPipe) id: number) {
+  async remove(@Body() data: IdListDto, @Req() req) {
+    // parse all id into number
+    const parseAllId = data.id.map((value) =>
+      typeof value === 'string' ? parseInt(value) : value,
+    );
+    // filter id where id is not current user id
+    const id = parseAllId.filter((item) => item !== req.user['sub']);
     await this.userService.deleteUser(id);
   }
 }

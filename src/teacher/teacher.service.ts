@@ -44,7 +44,7 @@ export class TeacherService {
     const isEmailExist = await this.findByEmail(data.email);
     const isEmailStudent = await this.findStudentEmail(data.email);
     if (isEmailExist || isEmailStudent)
-      throw new BadRequestException('Email already exist');
+      throw new BadRequestException('Email telah digunakan');
     await this.db.teacher.create({ data });
   };
 
