@@ -95,13 +95,13 @@ export class UserController {
   @ApiNotFoundResponse({
     description: 'Data dengan ID user yang diberikan tidak ditemukan',
   })
-  async remove(@Body() data: IdListDto, @Req() req) {
+  async remove(@Body() data: IdListDto, @Req() req: RequestWithUser) {
     // parse all id into number
     const parseAllId = data.id.map((value) =>
       typeof value === 'string' ? parseInt(value) : value,
     );
     // filter id where id is not current user id
     const id = parseAllId.filter((item) => item !== req.user['sub']);
-    await this.userService.deleteUser(id);
+    return await this.userService.deleteUser(id);
   }
 }

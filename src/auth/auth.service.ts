@@ -30,14 +30,12 @@ export class AuthService {
   }
 
   async logout(userId: number) {
-    return this.userService.updateUser(userId, { refreshToken: null });
+    return this.userService.updateToken(userId, null);
   }
 
   async updateRefreshToken(id: number, refreshToken: string) {
     const hashedRefreshToken = await Encryption.hash(refreshToken);
-    await this.userService.updateUser(id, {
-      refreshToken: hashedRefreshToken,
-    });
+    await this.userService.updateToken(id, hashedRefreshToken);
   }
 
   async getTokens(id: number, username: string) {
@@ -73,12 +71,13 @@ export class AuthService {
   async refreshTokens(userId: number, refreshToken: string) {
     const user = await this.userService.findById(userId);
     if (!user || !user.refreshToken)
-      throw new ForbiddenException('Access Denied');
+      throw new ForbiddenException('No user and token, access denied.');
     const refreshTokenMatches = await Encryption.isMatch(
       refreshToken,
       user.refreshToken,
     );
-    if (!refreshTokenMatches) throw new ForbiddenException('Access Denied');
+    if (!refreshTokenMatches)
+      throw new ForbiddenException('Token mismatch, access denied');
     const tokens = await this.getTokens(user.id, user.username);
     await this.updateRefreshToken(user.id, tokens.refreshToken);
     return tokens;

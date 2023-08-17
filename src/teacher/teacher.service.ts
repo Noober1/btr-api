@@ -61,9 +61,9 @@ export class TeacherService {
     return find;
   }
 
-  // TODO: ini belum beres gan
   async updateTeacher(id: string, data: UpdateTeacher) {
     const getTeacher = await this.findById(id);
+    console.log('getteacher', getTeacher);
     if (!getTeacher)
       throw new NotFoundException('Teacher with given id not found');
     if (data.email) {
@@ -71,19 +71,33 @@ export class TeacherService {
       const isEmailFromStudent = await this.isEmailByStudent(data.email);
       // if email used by other student or by teacher, return error
       if (isEmailUsed || isEmailFromStudent)
-        throw new BadRequestException('Email already used by other');
+        throw new BadRequestException('Email telah digunakan');
     }
 
-    await this.db.student.update({
+    await this.db.teacher.update({
       where: { id },
       data,
     });
   }
 
-  async deleteTeacher(id: string) {
-    const getTeacher = await this.findById(id);
-    if (!getTeacher)
-      throw new NotFoundException('Teacher with given id not found');
-    await this.db.teacher.delete({ where: { id } });
+  async deleteTeacher(userId: number, id: string[]) {
+    // find teacher where user id equal userId
+    const getTeacherByUserId = await this.db.teacher.findFirst({
+      where: {
+        user: {
+          id: userId,
+        },
+      },
+    });
+    // if teacher exist, remove from id list
+    if (getTeacherByUserId) {
+      id = id.filter((value) => value !== getTeacherByUserId.id);
+    }
+    // deleting teachers
+    const deleting = await this.db.teacher.deleteMany({
+      where: { id: { in: id } },
+    });
+    // return result
+    return deleting;
   }
 }

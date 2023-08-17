@@ -16,6 +16,7 @@ import {
   ApiBearerAuth,
   ApiOkResponse,
   ApiOperation,
+  ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { RequestWithUser } from './auth.interfaces';
 import { RefreshTokenGuard } from './refresh-token.guard';
@@ -47,7 +48,10 @@ export class AuthController {
     summary: 'Logout user',
     description: 'Setelah logout, akses token dari database akan dihapus',
   })
+  @ApiOkResponse({ description: 'Berhasil logout' })
+  @ApiUnauthorizedResponse({ description: 'Refresh token tidak valid' })
   @UseGuards(RefreshTokenGuard)
+  @HttpCode(HttpStatus.OK)
   logout(@Req() req: RequestWithUser) {
     this.authService.logout(req.user['sub']);
   }
@@ -59,8 +63,12 @@ export class AuthController {
     description:
       'Akses token memiliki masa kadaluarsa. Gunakan endpoint ini untuk membuat akses token baru.',
   })
-  @UseGuards(RefreshTokenGuard)
   @ApiBearerAuth()
+  @ApiOkResponse({
+    description: 'Mengembalikan akses dan refresh token yang baru',
+  })
+  @ApiUnauthorizedResponse({ description: 'Refresh token tidak valid' })
+  @UseGuards(RefreshTokenGuard)
   refreshTokens(@Req() req: RequestWithUser) {
     const userId = req.user['sub'];
     const refreshToken = req.user['refreshToken'];

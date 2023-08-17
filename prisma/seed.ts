@@ -13,6 +13,18 @@ async function main() {
   });
   console.log('Seeding teacher OK');
 
+  await prisma.major.createMany({
+    data: [
+      { code: 'TKJ', name: 'Teknik Komputer dan jaringan' },
+      { code: 'TKR', name: 'Teknik Kendaraan Ringan' },
+      { code: 'JB', name: 'Tata Boga' },
+      { code: 'TBSM', name: 'Teknik dan Bisnis Sepeda Motor' },
+      { code: 'APH', name: 'Perhotelan' },
+    ],
+  });
+  console.log('Seeding major OK');
+
+  const getMajor = await prisma.major.findFirst();
   await prisma.student.createMany({
     data: [
       {
@@ -20,6 +32,7 @@ async function main() {
         fullname: 'Student name',
         birthDate: new Date('04/06/1998'),
         birthPlace: 'Subang',
+        majorId: getMajor.id,
       },
     ],
     skipDuplicates: true,

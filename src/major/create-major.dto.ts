@@ -4,13 +4,13 @@ import { IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class CreateMajor implements Partial<Major> {
   @ApiProperty()
-  @IsString()
+  @IsString({ message: 'Harus berupa huruf dan angka' })
   @Length(1, 10)
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
   code: string;
 
   @ApiProperty()
-  @IsString()
-  @IsNotEmpty()
+  @IsString({ message: 'Harus berupa huruf dan angka' })
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
   name: string;
 }

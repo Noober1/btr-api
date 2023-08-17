@@ -4,22 +4,22 @@ import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateCourse implements Partial<Course> {
   @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
+  @IsString({ message: 'Harus berupa huruf dan angka' })
   name: string;
 
   @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
+  @IsString({ message: 'Harus berupa huruf dan angka' })
   description: string;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
   @IsEnum(CourseType)
   type: CourseType;
 
   @ApiProperty()
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Data tidak boleh kosong' })
   @IsEnum(CourseCategory)
   category: CourseCategory;
 }

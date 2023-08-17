@@ -41,10 +41,32 @@ export class StudentService {
   }
 
   findAll: Paginate<Student> = async (page, limit) => {
-    return this.db.extended().student.paginate({
-      page,
-      limit,
-    });
+    return this.db
+      .extended()
+      .student.paginate({
+        page,
+        limit,
+        select: {
+          id: true,
+          createdAt: true,
+          updatedAt: true,
+          year: true,
+          NIS: true,
+          fullname: true,
+          major: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      })
+      .then(({ result, ...rest }) => ({
+        ...rest,
+        result: result.map(({ major, ...student }) => ({
+          ...student,
+          major: major.name,
+        })),
+      }));
   };
 
   create: ServiceCreateData<CreateStudent> = async (data) => {
@@ -76,7 +98,7 @@ export class StudentService {
       const isEmailFromTeacher = await this.isEmailByTeacher(data.email);
       // if email used by other student or by teacher, return error
       if (isEmailUsed || isEmailFromTeacher)
-        throw new BadRequestException('Email already used by other');
+        throw new BadRequestException('Email telah digunakan');
     }
 
     await this.db.student.update({

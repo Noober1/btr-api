@@ -28,6 +28,8 @@ import { Teacher } from '@prisma/client';
 import { ApiPagination } from '@/middlewares/paginationApi.decorator';
 import { UpdateTeacher } from './update-teacher.dto';
 import { AccessTokenGuard } from '@/auth/access-token.guard';
+import { IdListDto } from '@/id-list.dto';
+import { RequestWithUser } from '@/auth/auth.interfaces';
 
 @Controller('teacher')
 @ApiTags('Guru')
@@ -80,13 +82,13 @@ export class TeacherController {
     await this.teacherService.create(data);
   }
 
-  @Delete(':id')
-  @ApiOperation({ summary: 'Menghapus guru berdasarkan ID' })
+  @Delete()
+  @ApiOperation({ summary: 'Menghapus guru berdasarkan kumpulan ID' })
   @ApiOkResponse({ description: 'Guru berhasil dihapus' })
-  @ApiNotFoundResponse({
-    description: 'Guru dengan ID yang diberikan tidak ditemukan',
-  })
-  delete(@Param('id') id: string) {
-    return this.teacherService.deleteTeacher(id);
+  async remove(@Body() data: IdListDto, @Req() req: RequestWithUser) {
+    const id = data.id.map((value) =>
+      typeof value === 'number' ? value.toString() : value,
+    );
+    return await this.teacherService.deleteTeacher(req.user.sub, id);
   }
 }

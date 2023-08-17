@@ -20,6 +20,13 @@ export class UserService {
     private readonly studentService: StudentService,
   ) {}
 
+  async updateToken(id: number, token: string | null) {
+    return await this.db.user.update({
+      where: { id },
+      data: { refreshToken: token },
+    });
+  }
+
   async findById(id: number): Promise<User> {
     return await this.db.user.findUnique({ where: { id } });
   }
@@ -85,6 +92,8 @@ export class UserService {
         limit,
         select: {
           id: true,
+          updatedAt: true,
+          createdAt: true,
           username: true,
           role: true,
           student: {
@@ -101,14 +110,9 @@ export class UserService {
       })
       .then(({ result, ...rest }) => ({
         ...rest,
-        result: result.map((value) => ({
-          id: value.id,
-          username: value.username,
-          role: value.role,
-          email:
-            value.role === 'STUDENT'
-              ? value.student.email
-              : value.teacher.email,
+        result: result.map(({ teacher, student, ...value }) => ({
+          ...value,
+          email: value.role === 'STUDENT' ? student.email : teacher.email,
         })),
       }));
   };
@@ -140,7 +144,10 @@ export class UserService {
         },
       },
     });
-    if (!getUser) throw new NotFoundException('User with given ID not found');
+    if (!getUser)
+      throw new NotFoundException(
+        'Nama pengguna dengan ID tersebut tidak ditemukan',
+      );
     const userData =
       getUser.student !== null ? getUser.student : getUser.teacher;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -153,14 +160,19 @@ export class UserService {
 
   async updateUser(id: number, data: UpdateUser) {
     const getUser = await this.findById(id);
-    if (!getUser) throw new NotFoundException('User with given id not found');
+    if (!getUser)
+      throw new NotFoundException(
+        'Nama pengguna dengan ID tersebut tidak ditemukan',
+      );
     if (data.username) {
       const isUsernameUsedByOther = await this.isUsernameUsedByOther(
         data.username,
         id,
       );
       if (isUsernameUsedByOther)
-        throw new BadRequestException('Username already used by other user');
+        throw new BadRequestException(
+          'Nama pengguna telah digunakan oleh pengguna lain',
+        );
     }
 
     data.password = data.password
@@ -174,12 +186,13 @@ export class UserService {
   }
 
   async deleteUser(ids: number[]) {
-    await this.db.user.deleteMany({
+    const deleting = await this.db.user.deleteMany({
       where: {
         id: {
           in: ids,
         },
       },
     });
+    return deleting;
   }
 }
