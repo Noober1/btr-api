@@ -20,8 +20,11 @@ model Student {
   id         String    @id @default(cuid())
   createdAt  DateTime  @default(now())
   updatedAt  DateTime? @updatedAt
+  year       Int       @default(2023)
   NIS        String?   @db.VarChar(10)
   NISN       String?   @db.VarChar(10)
+  major      Major     @relation(references: [id], fields: [majorId])
+  majorId    String
   fullname   String
   email      String    @unique
   gender     Gender    @default(MALE)
@@ -41,6 +44,7 @@ model Major {
   code      String    @unique @db.VarChar(10)
 
   academicSession AcademicSession[]
+  students        Student[]
 }
 
 model User {
@@ -91,9 +95,9 @@ model Score {
   id                String          @id @default(cuid())
   createdAt         DateTime        @default(now())
   updatedAt         DateTime?       @updatedAt
-  AcademicSession   AcademicSession @relation(fields: [academicSessionId], references: [id])
+  AcademicSession   AcademicSession @relation(fields: [academicSessionId], references: [id], onDelete: Cascade)
   academicSessionId String
-  student           Student?        @relation(fields: [studentId], references: [id])
+  student           Student?        @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId         String?
   course            Course          @relation(fields: [courseId], references: [id])
   courseId          String
